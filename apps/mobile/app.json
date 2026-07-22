@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "Compound Interest",
-    "slug": "compound-interest-budgeting",
+    "name": "Tally",
+    "slug": "tally-budgeting",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "scheme": "compound-interest",
+    "userInterfaceStyle": "automatic",
+    "scheme": "tally",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.compoundinterest.budgeting"
+      "bundleIdentifier": "com.tallybudget.app"
     },
     "android": {
-      "package": "com.compoundinterest.budgeting",
+      "package": "com.tallybudget.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#2a78d6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

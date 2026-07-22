@@ -1,5 +1,6 @@
 import { BarChart3, CalendarRange, LayoutDashboard, PiggyBank, Receipt, Settings as SettingsIcon, Wallet } from "lucide-react";
 import { useState, type ComponentType } from "react";
+import { BrandMark } from "./components/BrandMark";
 import { DataProvider, useData } from "./db/DataContext";
 import { BudgetsTab } from "./tabs/BudgetsTab";
 import { DashboardTab } from "./tabs/DashboardTab";
@@ -44,8 +45,8 @@ function AppShell() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark" />
-          <span className="brand-name">Compound Interest</span>
+          <BrandMark />
+          <span className="brand-name">Tally</span>
         </div>
         {TABS.map((tab) => (
           <button
@@ -62,7 +63,7 @@ function AppShell() {
 
       <div className="main-column">
         <header className="topbar">
-          <div className="brand-mark" style={{ width: 22, height: 22 }} />
+          <BrandMark size={22} />
           <span className="brand-name">{activeTab.label}</span>
         </header>
 

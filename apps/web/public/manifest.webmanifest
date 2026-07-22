@@ -1,6 +1,6 @@
 {
-  "name": "Compound Interest — Budgeting",
-  "short_name": "Compound Interest",
+  "name": "Tally — Budgeting",
+  "short_name": "Tally",
   "description": "Budgeting for variable income: weekly or monthly plans, budgets months ahead, and savings/investing recommendations.",
   "start_url": "/",
   "display": "standalone",

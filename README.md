@@ -1,4 +1,4 @@
-# Compound Interest
+# Tally
 
 A budgeting app built for variable income: log what actually comes in and
 goes out, plan budgets weekly *or* monthly (and months ahead of time), and
@@ -82,13 +82,11 @@ npm run dev:mobile    # starts the Expo dev server — scan the QR code
 
 ```bash
 npm run test:core     # runs the Vitest suite (25 tests)
-npm run typecheck      # typechecks core + web
+npm run typecheck      # typechecks core + web + mobile
 ```
 
 ## Known limitations (first pass)
 
-- **Mobile dark mode** isn't wired up yet — the web app follows your
-  system/browser theme, mobile is light-only for now.
 - **No cross-device sync** — see the Data & sync section above. Use
   Settings → Export/Import to move a backup between devices manually.
 - Category **budgeting kinds** (essential/discretionary/savings/investing)
