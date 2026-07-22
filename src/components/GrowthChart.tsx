@@ -1,16 +1,14 @@
 import React, { useEffect, useMemo } from 'react';
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Path, Rect, Stop, Line, ClipPath, G } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Stop, Line, G } from 'react-native-svg';
 import Animated, {
   Easing,
-  useAnimatedProps,
+  useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { MonthPoint } from '../lib/compound';
 import { colors, radii, spacing, typography } from '../theme';
-
-const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 interface Props {
   points: MonthPoint[];
@@ -70,7 +68,7 @@ export function GrowthChart({ points, years }: Props) {
     progress.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) });
   }, [investedLine, progress]);
 
-  const animatedProps = useAnimatedProps(() => ({
+  const revealStyle = useAnimatedStyle(() => ({
     width: Math.max(0, Math.min(width, progress.value * width)),
   }));
 
@@ -80,43 +78,44 @@ export function GrowthChart({ points, years }: Props) {
     <View>
       <View onLayout={onLayout} style={styles.chartBox}>
         {width > 0 ? (
-          <Svg width={width} height={HEIGHT}>
-            <Defs>
-              <LinearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={colors.growth} stopOpacity={0.45} />
-                <Stop offset="1" stopColor={colors.growth} stopOpacity={0.02} />
-              </LinearGradient>
-              <ClipPath id="reveal">
-                <AnimatedRect x={0} y={0} height={HEIGHT} animatedProps={animatedProps} />
-              </ClipPath>
-            </Defs>
-
-            {[0.25, 0.5, 0.75].map((f) => (
-              <Line
-                key={f}
-                x1={0}
-                x2={width}
-                y1={HEIGHT * f}
-                y2={HEIGHT * f}
-                stroke={colors.surfaceBorder}
-                strokeWidth={1}
-                strokeDasharray="2 6"
-              />
-            ))}
-
-            <G clipPath="url(#reveal)">
-              <Path d={investedArea} fill="url(#areaGrad)" />
-              <Path
-                d={contributedLine}
-                stroke={colors.spend}
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                fill="none"
-                opacity={0.85}
-              />
-              <Path d={investedLine} stroke={colors.growth} strokeWidth={3} fill="none" />
-            </G>
-          </Svg>
+          <>
+            <Svg width={width} height={HEIGHT} style={StyleSheet.absoluteFill}>
+              {[0.25, 0.5, 0.75].map((f) => (
+                <Line
+                  key={f}
+                  x1={0}
+                  x2={width}
+                  y1={HEIGHT * f}
+                  y2={HEIGHT * f}
+                  stroke={colors.surfaceBorder}
+                  strokeWidth={1}
+                  strokeDasharray="2 6"
+                />
+              ))}
+            </Svg>
+            <Animated.View style={[styles.reveal, revealStyle]}>
+              <Svg width={width} height={HEIGHT}>
+                <Defs>
+                  <LinearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <Stop offset="0" stopColor={colors.growth} stopOpacity={0.45} />
+                    <Stop offset="1" stopColor={colors.growth} stopOpacity={0.02} />
+                  </LinearGradient>
+                </Defs>
+                <G>
+                  <Path d={investedArea} fill="url(#areaGrad)" />
+                  <Path
+                    d={contributedLine}
+                    stroke={colors.spend}
+                    strokeWidth={2}
+                    strokeDasharray="5 5"
+                    fill="none"
+                    opacity={0.85}
+                  />
+                  <Path d={investedLine} stroke={colors.growth} strokeWidth={3} fill="none" />
+                </G>
+              </Svg>
+            </Animated.View>
+          </>
         ) : null}
       </View>
 
@@ -147,6 +146,10 @@ const styles = StyleSheet.create({
     height: HEIGHT,
     width: '100%',
     borderRadius: radii.md,
+    overflow: 'hidden',
+  },
+  reveal: {
+    height: HEIGHT,
     overflow: 'hidden',
   },
   xAxis: {
