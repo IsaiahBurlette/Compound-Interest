@@ -215,6 +215,16 @@ function BudgetFormModal({
     setLines(distributeAllocationToCategories(rec, categories));
   };
 
+  const updateLine = (idx: number, patch: Partial<BudgetLine>) =>
+    setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
+  const removeLine = (idx: number) => setLines((prev) => prev.filter((_, i) => i !== idx));
+  const usedCategoryIds = new Set(lines.map((l) => l.categoryId));
+  const availableToAdd = activeCategories.filter((c) => !usedCategoryIds.has(c.id));
+  const addLine = () => {
+    if (availableToAdd.length === 0) return;
+    setLines((prev) => [...prev, { categoryId: availableToAdd[0].id, plannedAmount: 0 }]);
+  };
+
   const valid = plannedIncome !== "" && Number(plannedIncome) >= 0;
 
   return (
@@ -260,22 +270,41 @@ function BudgetFormModal({
       <TextField label="Planned income" value={plannedIncome} onChangeText={setPlannedIncome} placeholder="0.00" keyboardType="decimal-pad" />
       <SelectField label="Allocation strategy" value={strategyId} onChange={setStrategyId} options={allocationStrategies.map((s) => ({ value: s.id, label: s.name }))} />
       <Button label="Auto-fill from strategy" onPress={autoFillFromStrategy} disabled={!plannedIncome || Number(plannedIncome) <= 0} />
+      <Text style={{ fontSize: 11.5, color: colors.textMuted, marginTop: -6 }}>
+        Auto-fill is optional — you can also skip it and add categories with your own amounts below.
+      </Text>
 
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: 10 }}>
         <Text style={shared.sectionTitle}>Budget lines</Text>
         {lines.length === 0 ? (
-          <Text style={shared.emptyStateText}>No lines yet. Auto-fill from your strategy above.</Text>
+          <Text style={shared.emptyStateText}>No lines yet. Add a category below, or auto-fill from a strategy above.</Text>
         ) : (
-          lines.map((line, idx) => {
-            const cat = activeCategories.find((c) => c.id === line.categoryId);
-            return (
-              <View key={idx} style={shared.listRow}>
-                <Text style={{ fontSize: 13, color: colors.textPrimary, flexShrink: 1 }}>{cat?.name ?? "Unknown"}</Text>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textPrimary }}>{formatMoney(line.plannedAmount, settings?.currency ?? "USD")}</Text>
+          lines.map((line, idx) => (
+            <View key={idx} style={{ backgroundColor: colors.surfaceSunken, borderRadius: 10, padding: 10, gap: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <SelectField
+                    label="Category"
+                    value={line.categoryId}
+                    onChange={(v) => updateLine(idx, { categoryId: v })}
+                    options={activeCategories.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                </View>
+                <Pressable onPress={() => removeLine(idx)} hitSlop={8} style={{ padding: 8 }}>
+                  <Ionicons name="trash-outline" size={18} color={colors.statusCritical} />
+                </Pressable>
               </View>
-            );
-          })
+              <TextField
+                label="Planned amount"
+                value={line.plannedAmount === 0 ? "" : String(line.plannedAmount)}
+                onChangeText={(v) => updateLine(idx, { plannedAmount: Number(v) || 0 })}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+              />
+            </View>
+          ))
         )}
+        <Button label="Add line" onPress={addLine} disabled={availableToAdd.length === 0} />
         <Text style={{ fontSize: 12.5, color: colors.textMuted }}>Total planned: {formatMoney(plannedTotal, settings?.currency ?? "USD")}</Text>
       </View>
     </Modal>
