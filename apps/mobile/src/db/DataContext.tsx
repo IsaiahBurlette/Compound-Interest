@@ -26,6 +26,7 @@ interface DataContextValue {
 
   saveCategory: (input: Partial<Category> & { name: string; kind: Category["kind"]; color: string }) => Promise<void>;
   archiveCategory: (id: string, archived: boolean) => Promise<void>;
+  removeCategory: (id: string) => Promise<void>;
 
   saveIncomeSource: (input: Partial<IncomeSource> & { name: string; frequency: IncomeSource["frequency"] }) => Promise<void>;
   removeIncomeSource: (id: string) => Promise<void>;
@@ -109,6 +110,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     },
     [categories]
   );
+
+  const removeCategory: DataContextValue["removeCategory"] = useCallback(async (id) => {
+    await store.deleteCategory(id);
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+  }, []);
 
   const saveIncomeSource: DataContextValue["saveIncomeSource"] = useCallback(async (input) => {
     const source: IncomeSource = {
@@ -233,6 +239,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       settings,
       saveCategory,
       archiveCategory,
+      removeCategory,
       saveIncomeSource,
       removeIncomeSource,
       saveIncomeEntry,
@@ -258,6 +265,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       settings,
       saveCategory,
       archiveCategory,
+      removeCategory,
       saveIncomeSource,
       removeIncomeSource,
       saveIncomeEntry,

@@ -12,16 +12,18 @@ import {
   todayISO,
   type BudgetLine,
   type BudgetPeriod,
+  type Category,
   type PeriodType,
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
+import { CategoryModal } from "../components/CategoryModal";
 import { DateField } from "../components/DateField";
 import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
+import { Screen } from "../components/Screen";
 import { Segmented } from "../components/Segmented";
 import { useData } from "../db/DataContext";
 import { useTheme } from "../ThemeContext";
@@ -202,12 +204,13 @@ function BudgetFormModal({
   onSave: (input: Partial<BudgetPeriod> & Pick<BudgetPeriod, "type" | "startDate" | "endDate" | "plannedIncome" | "lines">) => void;
 }) {
   const { colors, shared } = useTheme();
-  const { categories, allocationStrategies, settings } = useData();
+  const { categories, allocationStrategies, settings, transactions, budgetPeriods, saveCategory, removeCategory } = useData();
   const [type, setType] = useState<PeriodType>(budget?.type ?? defaultType);
   const [anchorDate, setAnchorDate] = useState(budget?.startDate ?? todayISO());
   const [plannedIncome, setPlannedIncome] = useState(budget?.plannedIncome?.toString() ?? "");
   const [lines, setLines] = useState<BudgetLine[]>(budget?.lines ?? []);
   const [strategyId, setStrategyId] = useState(budget?.allocationStrategyId ?? settings?.defaultAllocationStrategyId ?? allocationStrategies[0]?.id ?? "");
+  const [categoryEditor, setCategoryEditor] = useState<{ mode: "new" } | { mode: "edit"; category: Category } | null>(null);
 
   const weekStartsOn = settings?.weekStartsOn ?? 1;
   const range = periodRange(anchorDate, type, weekStartsOn);
@@ -232,9 +235,46 @@ function BudgetFormModal({
     setLines((prev) => [...prev, { categoryId: availableToAdd[0].id, plannedAmount: 0 }]);
   };
 
+  const handleSaveNewCategory = async (input: Partial<Category> & { name: string; kind: Category["kind"]; color: string }) => {
+    const id = input.id ?? createId();
+    await saveCategory({ ...input, id });
+    setLines((prev) => [...prev, { categoryId: id, plannedAmount: 0 }]);
+    setCategoryEditor(null);
+  };
+
+  const handleSaveEditedCategory = async (input: Partial<Category> & { name: string; kind: Category["kind"]; color: string }) => {
+    await saveCategory(input);
+    setCategoryEditor(null);
+  };
+
+  const handleDeleteCategory = (category: Category) => {
+    const txCount = transactions.filter((t) => t.categoryId === category.id && !t.deletedAt).length;
+    const lineCount = budgetPeriods.reduce((n, b) => n + b.lines.filter((l) => l.categoryId === category.id).length, 0);
+    const parts: string[] = [];
+    if (txCount > 0) parts.push(`${txCount} transaction${txCount === 1 ? "" : "s"}`);
+    if (lineCount > 0) parts.push(`${lineCount} budget line${lineCount === 1 ? "" : "s"}`);
+    Alert.alert(
+      `Delete "${category.name}"?`,
+      parts.length > 0 ? `It's used by ${parts.join(" and ")} — those will show as "Uncategorized" instead of being deleted.` : "This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            removeCategory(category.id);
+            setLines((prev) => prev.filter((l) => l.categoryId !== category.id));
+            setCategoryEditor(null);
+          },
+        },
+      ]
+    );
+  };
+
   const valid = plannedIncome !== "" && Number(plannedIncome) >= 0;
 
   return (
+    <>
     <Modal
       visible
       title={budget ? "Edit budget" : "New budget"}
@@ -276,7 +316,14 @@ function BudgetFormModal({
       </Text>
       <TextField label="Planned income" value={plannedIncome} onChangeText={setPlannedIncome} placeholder="0.00" keyboardType="decimal-pad" />
       <SelectField label="Allocation strategy" value={strategyId} onChange={setStrategyId} options={allocationStrategies.map((s) => ({ value: s.id, label: s.name }))} />
-      <Button label="Auto-fill from strategy" onPress={autoFillFromStrategy} disabled={!plannedIncome || Number(plannedIncome) <= 0} />
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <Button label="New category" onPress={() => setCategoryEditor({ mode: "new" })} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button label="Auto-fill from strategy" onPress={autoFillFromStrategy} disabled={!plannedIncome || Number(plannedIncome) <= 0} />
+        </View>
+      </View>
       <Text style={{ fontSize: 11.5, color: colors.textMuted, marginTop: -6 }}>
         Auto-fill is optional — you can also skip it and add categories with your own amounts below.
       </Text>
@@ -284,37 +331,57 @@ function BudgetFormModal({
       <View style={{ gap: 10 }}>
         <Text style={shared.sectionTitle}>Budget lines</Text>
         {lines.length === 0 ? (
-          <Text style={shared.emptyStateText}>No lines yet. Add a category below, or auto-fill from a strategy above.</Text>
+          <Text style={shared.emptyStateText}>No lines yet. Add a category (new or existing) below, or auto-fill from a strategy above.</Text>
         ) : (
-          lines.map((line, idx) => (
-            <View key={idx} style={{ backgroundColor: colors.surfaceSunken, borderRadius: 10, padding: 10, gap: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
-                <View style={{ flex: 1 }}>
-                  <SelectField
-                    label="Category"
-                    value={line.categoryId}
-                    onChange={(v) => updateLine(idx, { categoryId: v })}
-                    options={activeCategories.map((c) => ({ value: c.id, label: c.name }))}
-                  />
+          lines.map((line, idx) => {
+            const lineCategory = activeCategories.find((c) => c.id === line.categoryId);
+            return (
+              <View key={idx} style={{ backgroundColor: colors.surfaceSunken, borderRadius: 10, padding: 10, gap: 8 }}>
+                <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <SelectField
+                      label="Category"
+                      value={line.categoryId}
+                      onChange={(v) => updateLine(idx, { categoryId: v })}
+                      options={activeCategories.map((c) => ({ value: c.id, label: c.name }))}
+                    />
+                  </View>
+                  <Pressable
+                    onPress={() => lineCategory && setCategoryEditor({ mode: "edit", category: lineCategory })}
+                    hitSlop={8}
+                    style={{ padding: 8 }}
+                  >
+                    <Ionicons name="pencil-outline" size={18} color={colors.textSecondary} />
+                  </Pressable>
+                  <Pressable onPress={() => removeLine(idx)} hitSlop={8} style={{ padding: 8 }}>
+                    <Ionicons name="trash-outline" size={18} color={colors.statusCritical} />
+                  </Pressable>
                 </View>
-                <Pressable onPress={() => removeLine(idx)} hitSlop={8} style={{ padding: 8 }}>
-                  <Ionicons name="trash-outline" size={18} color={colors.statusCritical} />
-                </Pressable>
+                <TextField
+                  label="Planned amount"
+                  value={line.plannedAmount === 0 ? "" : String(line.plannedAmount)}
+                  onChangeText={(v) => updateLine(idx, { plannedAmount: Number(v) || 0 })}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                />
               </View>
-              <TextField
-                label="Planned amount"
-                value={line.plannedAmount === 0 ? "" : String(line.plannedAmount)}
-                onChangeText={(v) => updateLine(idx, { plannedAmount: Number(v) || 0 })}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-              />
-            </View>
-          ))
+            );
+          })
         )}
         <Button label="Add line" onPress={addLine} disabled={availableToAdd.length === 0} />
         <Text style={{ fontSize: 12.5, color: colors.textMuted }}>Total planned: {formatMoney(plannedTotal, settings?.currency ?? "USD")}</Text>
       </View>
     </Modal>
+
+    {categoryEditor && (
+      <CategoryModal
+        category={categoryEditor.mode === "edit" ? categoryEditor.category : null}
+        onClose={() => setCategoryEditor(null)}
+        onSave={categoryEditor.mode === "new" ? handleSaveNewCategory : handleSaveEditedCategory}
+        onDelete={categoryEditor.mode === "edit" ? handleDeleteCategory : undefined}
+      />
+    )}
+    </>
   );
 }
 

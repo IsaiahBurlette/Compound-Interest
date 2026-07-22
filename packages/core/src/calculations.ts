@@ -39,6 +39,16 @@ export interface CategoryTotal {
 }
 
 /** Spend broken out by category for a range, sorted largest-first — feeds the pie chart. */
+/** Placeholder shown for spend whose category was deleted — keeps totals honest instead of silently dropping it. */
+export const UNCATEGORIZED_CATEGORY: Category = {
+  id: "__uncategorized__",
+  name: "Uncategorized",
+  kind: "discretionary",
+  color: "#898781",
+  archived: false,
+  updatedAt: "",
+};
+
 export function byCategory(transactions: Transaction[], categories: Category[], range: Range): CategoryTotal[] {
   const liveTx = live(transactions).filter((t) => isWithin(t.date, range.start, range.end));
   const totalSpend = liveTx.reduce((sum, t) => sum + t.amount, 0);
@@ -48,10 +58,21 @@ export function byCategory(transactions: Transaction[], categories: Category[], 
   }
   const catById = new Map(categories.map((c) => [c.id, c]));
   const rows: CategoryTotal[] = [];
+  let uncategorizedTotal = 0;
   for (const [categoryId, total] of byId.entries()) {
     const category = catById.get(categoryId);
-    if (!category) continue;
+    if (!category) {
+      uncategorizedTotal += total;
+      continue;
+    }
     rows.push({ category, total: round2(total), pctOfSpend: totalSpend > 0 ? round2((total / totalSpend) * 100) : 0 });
+  }
+  if (uncategorizedTotal > 0) {
+    rows.push({
+      category: UNCATEGORIZED_CATEGORY,
+      total: round2(uncategorizedTotal),
+      pctOfSpend: totalSpend > 0 ? round2((uncategorizedTotal / totalSpend) * 100) : 0,
+    });
   }
   return rows.sort((a, b) => b.total - a.total);
 }

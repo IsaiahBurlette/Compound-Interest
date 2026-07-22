@@ -42,6 +42,19 @@ describe("calculations", () => {
     expect(rows[1].pctOfSpend).toBe(25);
   });
 
+  it("buckets spend under a deleted category into Uncategorized instead of dropping it", () => {
+    const deletedCategoryId = "no-longer-exists";
+    const txWithOrphan: Transaction[] = [
+      ...transactions,
+      { id: "t5", categoryId: deletedCategoryId, date: "2026-07-18", amount: 40, updatedAt: ts },
+    ];
+    const rows = byCategory(txWithOrphan, categories, { start: "2026-07-01", end: "2026-07-31" });
+    const total = rows.reduce((s, r) => s + r.total, 0);
+    expect(total).toBe(240); // 150 groceries + 50 dining + 40 orphaned
+    const uncategorized = rows.find((r) => r.category.name === "Uncategorized");
+    expect(uncategorized?.total).toBe(40);
+  });
+
   it("zero-fills months with no activity instead of dropping them", () => {
     const series = periodSeries(incomeEntries, transactions, { start: "2026-07-01", end: "2026-10-31" }, "month");
     expect(series.map((p) => p.key)).toEqual(["2026-07", "2026-08", "2026-09", "2026-10"]);

@@ -75,6 +75,9 @@ export class AsyncStorageDataStore implements DataStore {
   async upsertCategory(category: Category): Promise<void> {
     await writeList(KEYS.categories, upsert(await this.listCategories(), category));
   }
+  async deleteCategory(id: string): Promise<void> {
+    await writeList(KEYS.categories, (await this.listCategories()).filter((c) => c.id !== id));
+  }
 
   listIncomeSources(): Promise<IncomeSource[]> {
     return readList(KEYS.incomeSources);

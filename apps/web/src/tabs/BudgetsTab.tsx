@@ -12,10 +12,12 @@ import {
   todayISO,
   type BudgetLine,
   type BudgetPeriod,
+  type Category,
   type PeriodType,
 } from "@compound-interest/core";
-import { ChevronDown, ChevronUp, Plus, Sparkles, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { CategoryModal } from "../components/CategoryModal";
 import { Modal } from "../components/Modal";
 import { useData } from "../db/DataContext";
 import { formatDateLong, formatMoney, formatPct } from "../utils/format";
@@ -206,13 +208,14 @@ function BudgetFormModal({
   onClose: () => void;
   onSave: (input: Partial<BudgetPeriod> & Pick<BudgetPeriod, "type" | "startDate" | "endDate" | "plannedIncome" | "lines">) => void;
 }) {
-  const { categories, allocationStrategies, settings } = useData();
+  const { categories, allocationStrategies, settings, transactions, budgetPeriods, saveCategory, removeCategory } = useData();
   const [type, setType] = useState<PeriodType>(budget?.type ?? defaultType);
   const [anchorDate, setAnchorDate] = useState(budget?.startDate ?? todayISO());
   const [plannedIncome, setPlannedIncome] = useState(budget?.plannedIncome?.toString() ?? "");
   const [lines, setLines] = useState<BudgetLine[]>(budget?.lines ?? []);
   const [strategyId, setStrategyId] = useState(budget?.allocationStrategyId ?? settings?.defaultAllocationStrategyId ?? allocationStrategies[0]?.id ?? "");
   const [notes, setNotes] = useState(budget?.notes ?? "");
+  const [categoryEditor, setCategoryEditor] = useState<{ mode: "new" } | { mode: "edit"; category: Category } | null>(null);
 
   const weekStartsOn = settings?.weekStartsOn ?? 1;
   const range = periodRange(anchorDate, type, weekStartsOn);
@@ -229,6 +232,35 @@ function BudgetFormModal({
     setLines((prev) => [...prev, { categoryId: availableToAdd[0].id, plannedAmount: 0 }]);
   };
 
+  const handleSaveNewCategory = async (input: Partial<Category> & { name: string; kind: Category["kind"]; color: string }) => {
+    const id = input.id ?? createId();
+    await saveCategory({ ...input, id });
+    setLines((prev) => [...prev, { categoryId: id, plannedAmount: 0 }]);
+    setCategoryEditor(null);
+  };
+
+  const handleSaveEditedCategory = async (input: Partial<Category> & { name: string; kind: Category["kind"]; color: string }) => {
+    await saveCategory(input);
+    setCategoryEditor(null);
+  };
+
+  const handleDeleteCategory = (category: Category) => {
+    const txCount = transactions.filter((t) => t.categoryId === category.id && !t.deletedAt).length;
+    const lineCount = budgetPeriods.reduce((n, b) => n + b.lines.filter((l) => l.categoryId === category.id).length, 0);
+    const parts: string[] = [];
+    if (txCount > 0) parts.push(`${txCount} transaction${txCount === 1 ? "" : "s"}`);
+    if (lineCount > 0) parts.push(`${lineCount} budget line${lineCount === 1 ? "" : "s"}`);
+    const warning =
+      parts.length > 0
+        ? `Delete "${category.name}"? It's used by ${parts.join(" and ")} — those will show as "Uncategorized" instead of being deleted.`
+        : `Delete "${category.name}"? This can't be undone.`;
+    if (confirm(warning)) {
+      removeCategory(category.id);
+      setLines((prev) => prev.filter((l) => l.categoryId !== category.id));
+      setCategoryEditor(null);
+    }
+  };
+
   const autoFillFromStrategy = () => {
     const income = Number(plannedIncome);
     const strategy = allocationStrategies.find((s) => s.id === strategyId);
@@ -240,6 +272,7 @@ function BudgetFormModal({
   const valid = plannedIncome !== "" && Number(plannedIncome) >= 0 && lines.every((l) => l.plannedAmount >= 0);
 
   return (
+    <>
     <Modal
       title={budget ? "Edit budget" : "New budget"}
       onClose={onClose}
@@ -307,43 +340,60 @@ function BudgetFormModal({
           <div className="section-title" style={{ marginBottom: 0 }}>
             Budget lines
           </div>
-          <button className="btn btn-sm" onClick={autoFillFromStrategy} disabled={!plannedIncome || Number(plannedIncome) <= 0}>
-            <Sparkles size={13} /> Auto-fill from strategy
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-sm" onClick={() => setCategoryEditor({ mode: "new" })}>
+              <Plus size={13} /> New category
+            </button>
+            <button className="btn btn-sm" onClick={autoFillFromStrategy} disabled={!plannedIncome || Number(plannedIncome) <= 0}>
+              <Sparkles size={13} /> Auto-fill from strategy
+            </button>
+          </div>
         </div>
 
         {lines.length === 0 ? (
           <div className="empty-state" style={{ padding: "16px 0" }}>
-            No lines yet. Add categories manually or auto-fill from your allocation strategy above.
+            No lines yet. Add a category (new or existing) below, or auto-fill from your allocation strategy above.
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {lines.map((line, idx) => (
-              <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <select
-                  value={line.categoryId}
-                  onChange={(e) => updateLine(idx, { categoryId: e.target.value })}
-                  style={{ flex: 1, border: "1px solid var(--border-strong)", borderRadius: 6, padding: "7px 8px", background: "var(--surface-2)" }}
-                >
-                  {activeCategories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={line.plannedAmount}
-                  onChange={(e) => updateLine(idx, { plannedAmount: Number(e.target.value) })}
-                  style={{ width: 110, border: "1px solid var(--border-strong)", borderRadius: 6, padding: "7px 8px", background: "var(--surface-2)" }}
-                />
-                <button className="icon-btn btn-danger" onClick={() => removeLine(idx)} aria-label="Remove line">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ))}
+            {lines.map((line, idx) => {
+              const lineCategory = activeCategories.find((c) => c.id === line.categoryId);
+              return (
+                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <select
+                    value={line.categoryId}
+                    onChange={(e) => updateLine(idx, { categoryId: e.target.value })}
+                    style={{ flex: 1, border: "1px solid var(--border-strong)", borderRadius: 6, padding: "7px 8px", background: "var(--surface-2)" }}
+                  >
+                    {activeCategories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="icon-btn"
+                    aria-label="Edit category"
+                    title="Edit category"
+                    disabled={!lineCategory}
+                    onClick={() => lineCategory && setCategoryEditor({ mode: "edit", category: lineCategory })}
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={line.plannedAmount}
+                    onChange={(e) => updateLine(idx, { plannedAmount: Number(e.target.value) })}
+                    style={{ width: 110, border: "1px solid var(--border-strong)", borderRadius: 6, padding: "7px 8px", background: "var(--surface-2)" }}
+                  />
+                  <button className="icon-btn btn-danger" onClick={() => removeLine(idx)} aria-label="Remove line">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
         <div className="flex-between" style={{ marginTop: 10 }}>
@@ -361,6 +411,16 @@ function BudgetFormModal({
         <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything to remember about this period" />
       </div>
     </Modal>
+
+    {categoryEditor && (
+      <CategoryModal
+        category={categoryEditor.mode === "edit" ? categoryEditor.category : null}
+        onClose={() => setCategoryEditor(null)}
+        onSave={categoryEditor.mode === "new" ? handleSaveNewCategory : handleSaveEditedCategory}
+        onDelete={categoryEditor.mode === "edit" ? handleDeleteCategory : undefined}
+      />
+    )}
+    </>
   );
 }
 

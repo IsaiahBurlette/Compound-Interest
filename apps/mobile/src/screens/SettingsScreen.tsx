@@ -1,33 +1,62 @@
-import type { Category, CategoryKind, PeriodType } from "@compound-interest/core";
+import type { Category, PeriodType } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
-import { SelectField, TextField } from "../components/FormField";
-import { Modal } from "../components/Modal";
+import { CATEGORY_KIND_LABEL, CategoryModal } from "../components/CategoryModal";
+import { Screen } from "../components/Screen";
+import { SelectField } from "../components/FormField";
 import { useData } from "../db/DataContext";
 import { useTheme } from "../ThemeContext";
-import { paletteSlots } from "../theme";
 import { categoryIconName } from "../utils/categoryIcons";
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
-const KIND_LABEL: Record<CategoryKind, string> = {
-  essential: "Essential (need)",
-  discretionary: "Discretionary (want)",
-  savings: "Savings",
-  investing: "Investing",
-};
 
 export function SettingsScreen() {
   const { colors, shared } = useTheme();
-  const { settings, allocationStrategies, categories, saveSettings, saveCategory, archiveCategory, exportData, importData, resetAllData } = useData();
+  const {
+    settings,
+    allocationStrategies,
+    categories,
+    transactions,
+    budgetPeriods,
+    saveSettings,
+    saveCategory,
+    archiveCategory,
+    removeCategory,
+    exportData,
+    importData,
+    resetAllData,
+  } = useData();
   const [categoryModal, setCategoryModal] = useState<Category | null | "new">(null);
 
   if (!settings) return null;
+
+  const handleDeleteCategory = (category: Category) => {
+    const txCount = transactions.filter((t) => t.categoryId === category.id && !t.deletedAt).length;
+    const lineCount = budgetPeriods.reduce((n, b) => n + b.lines.filter((l) => l.categoryId === category.id).length, 0);
+    const parts: string[] = [];
+    if (txCount > 0) parts.push(`${txCount} transaction${txCount === 1 ? "" : "s"}`);
+    if (lineCount > 0) parts.push(`${lineCount} budget line${lineCount === 1 ? "" : "s"}`);
+    Alert.alert(
+      `Delete "${category.name}"?`,
+      parts.length > 0 ? `It's used by ${parts.join(" and ")} — those will show as "Uncategorized" instead of being deleted.` : "This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            removeCategory(category.id);
+            setCategoryModal(null);
+          },
+        },
+      ]
+    );
+  };
 
   const handleExport = async () => {
     const bundle = await exportData();
@@ -107,7 +136,7 @@ export function SettingsScreen() {
                 </View>
                 <View>
                   <Text style={{ fontSize: 13.5, fontWeight: "700", color: colors.textPrimary }}>{c.name}</Text>
-                  <Text style={{ fontSize: 11.5, color: colors.textMuted }}>{KIND_LABEL[c.kind]}</Text>
+                  <Text style={{ fontSize: 11.5, color: colors.textMuted }}>{CATEGORY_KIND_LABEL[c.kind]}</Text>
                 </View>
               </View>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
@@ -141,57 +170,9 @@ export function SettingsScreen() {
             await saveCategory(input);
             setCategoryModal(null);
           }}
+          onDelete={handleDeleteCategory}
         />
       )}
     </Screen>
-  );
-}
-
-function CategoryModal({
-  category,
-  onClose,
-  onSave,
-}: {
-  category: Category | null;
-  onClose: () => void;
-  onSave: (input: Partial<Category> & { name: string; kind: CategoryKind; color: string }) => void;
-}) {
-  const { colors, shared } = useTheme();
-  const [name, setName] = useState(category?.name ?? "");
-  const [kind, setKind] = useState<CategoryKind>(category?.kind ?? "essential");
-  const [color, setColor] = useState(category?.color ?? paletteSlots[0]);
-
-  return (
-    <Modal
-      visible
-      title={category ? "Edit category" : "Add category"}
-      onClose={onClose}
-      footer={
-        <>
-          <Button label="Cancel" onPress={onClose} />
-          <Button
-            label="Save"
-            variant="primary"
-            disabled={!name.trim()}
-            onPress={() => onSave({ id: category?.id, name: name.trim(), kind, color, icon: category?.icon, archived: category?.archived })}
-          />
-        </>
-      }
-    >
-      <TextField label="Name" value={name} onChangeText={setName} placeholder="e.g. Subscriptions" />
-      <SelectField label="Kind" value={kind} onChange={setKind} options={Object.entries(KIND_LABEL).map(([value, label]) => ({ value: value as CategoryKind, label }))} />
-      <View style={shared.field}>
-        <Text style={shared.fieldLabel}>Color</Text>
-        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-          {paletteSlots.map((c) => (
-            <Pressable
-              key={c}
-              onPress={() => setColor(c)}
-              style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c, borderWidth: color === c ? 2 : 0, borderColor: colors.textPrimary }}
-            />
-          ))}
-        </View>
-      </View>
-    </Modal>
   );
 }

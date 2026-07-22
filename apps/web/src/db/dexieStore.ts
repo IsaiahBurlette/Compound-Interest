@@ -83,6 +83,9 @@ export class DexieDataStore implements DataStore {
   async upsertCategory(category: Category): Promise<void> {
     await this.db.categories.put(category);
   }
+  async deleteCategory(id: string): Promise<void> {
+    await this.db.categories.delete(id);
+  }
 
   listIncomeSources(): Promise<IncomeSource[]> {
     return this.db.incomeSources.toArray();
