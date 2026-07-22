@@ -9,7 +9,7 @@ import {
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
@@ -44,6 +44,13 @@ export function ExpensesScreen() {
 
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
   const total = sorted.reduce((s, t) => s + t.amount, 0);
+
+  const handleDelete = (tx: Transaction) => {
+    Alert.alert("Delete this expense?", "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => removeTransaction(tx.id) },
+    ]);
+  };
 
   return (
     <Screen>
@@ -94,7 +101,7 @@ export function ExpensesScreen() {
                   <Pressable onPress={() => setTxModal(t)} hitSlop={8}>
                     <Ionicons name="create-outline" size={17} color={colors.textSecondary} />
                   </Pressable>
-                  <Pressable onPress={() => removeTransaction(t.id)} hitSlop={8}>
+                  <Pressable onPress={() => handleDelete(t)} hitSlop={8}>
                     <Ionicons name="trash-outline" size={17} color={colors.statusCritical} />
                   </Pressable>
                 </View>

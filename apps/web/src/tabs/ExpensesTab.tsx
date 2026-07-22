@@ -37,6 +37,10 @@ export function ExpensesTab() {
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
   const total = sorted.reduce((s, t) => s + t.amount, 0);
 
+  const handleDelete = (tx: Transaction) => {
+    if (confirm("Delete this expense? This can't be undone.")) removeTransaction(tx.id);
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -109,7 +113,7 @@ export function ExpensesTab() {
                         <button className="icon-btn" onClick={() => setTxModal(t)}>
                           Edit
                         </button>
-                        <button className="icon-btn btn-danger" onClick={() => removeTransaction(t.id)} aria-label="Delete">
+                        <button className="icon-btn btn-danger" onClick={() => handleDelete(t)} aria-label="Delete">
                           <Trash2 size={15} />
                         </button>
                       </div>

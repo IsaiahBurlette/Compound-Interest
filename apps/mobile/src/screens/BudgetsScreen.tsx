@@ -16,7 +16,7 @@ import {
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
@@ -54,6 +54,13 @@ export function BudgetsScreen() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+
+  const handleDelete = (budget: BudgetPeriod) => {
+    Alert.alert(`Delete this ${budget.type} budget?`, "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => removeBudgetPeriod(budget.id) },
+    ]);
+  };
 
   return (
     <Screen>
@@ -148,7 +155,7 @@ export function BudgetsScreen() {
                   )}
                   <View style={{ flexDirection: "row", gap: 8 }}>
                     <Button label="Edit" onPress={() => setEditModal(budget)} />
-                    <Button label="Delete" variant="danger" onPress={() => removeBudgetPeriod(budget.id)} />
+                    <Button label="Delete" variant="danger" onPress={() => handleDelete(budget)} />
                   </View>
                 </View>
               )}

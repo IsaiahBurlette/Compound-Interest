@@ -46,6 +46,10 @@ export function BudgetsTab() {
       return next;
     });
 
+  const handleDelete = (budget: BudgetPeriod) => {
+    if (confirm(`Delete this ${budget.type} budget? This can't be undone.`)) removeBudgetPeriod(budget.id);
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -156,7 +160,7 @@ export function BudgetsTab() {
                       <button className="btn btn-sm" onClick={() => setEditModal(budget)}>
                         Edit
                       </button>
-                      <button className="btn btn-sm btn-danger" onClick={() => removeBudgetPeriod(budget.id)}>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDelete(budget)}>
                         <Trash2 size={13} /> Delete
                       </button>
                     </div>

@@ -24,6 +24,7 @@ export interface DataStore {
 
   listIncomeSources(): Promise<IncomeSource[]>;
   upsertIncomeSource(source: IncomeSource): Promise<void>;
+  deleteIncomeSource(id: string): Promise<void>;
 
   listIncomeEntries(): Promise<IncomeEntry[]>;
   upsertIncomeEntry(entry: IncomeEntry): Promise<void>;

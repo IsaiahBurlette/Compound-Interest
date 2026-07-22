@@ -14,7 +14,7 @@ const FREQUENCIES: { value: IncomeFrequency; label: string }[] = [
 ];
 
 export function IncomeTab() {
-  const { incomeSources, incomeEntries, settings, saveIncomeSource, saveIncomeEntry, removeIncomeEntry } = useData();
+  const { incomeSources, incomeEntries, settings, saveIncomeSource, removeIncomeSource, saveIncomeEntry, removeIncomeEntry } = useData();
   const currency = settings?.currency ?? "USD";
   const [sourceModal, setSourceModal] = useState<IncomeSource | null | "new">(null);
   const [entryModal, setEntryModal] = useState<IncomeEntry | null | "new">(null);
@@ -23,6 +23,19 @@ export function IncomeTab() {
   const sourceById = useMemo(() => new Map(incomeSources.map((s) => [s.id, s])), [incomeSources]);
 
   const sortedEntries = [...incomeEntries].sort((a, b) => b.date.localeCompare(a.date));
+
+  const handleDeleteSource = (source: IncomeSource) => {
+    const entryCount = incomeEntries.filter((e) => e.sourceId === source.id).length;
+    const warning =
+      entryCount > 0
+        ? `Delete "${source.name}"? It has ${entryCount} logged income ${entryCount === 1 ? "entry" : "entries"} — those entries will stay in your log but show as an unknown source.`
+        : `Delete "${source.name}"? This can't be undone.`;
+    if (confirm(warning)) removeIncomeSource(source.id);
+  };
+
+  const handleDeleteEntry = (entry: IncomeEntry) => {
+    if (confirm("Delete this income entry? This can't be undone.")) removeIncomeEntry(entry.id);
+  };
 
   return (
     <div>
@@ -71,6 +84,9 @@ export function IncomeTab() {
                   >
                     {s.archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
                   </button>
+                  <button className="icon-btn btn-danger" title="Delete" onClick={() => handleDeleteSource(s)}>
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
             ))
@@ -108,7 +124,7 @@ export function IncomeTab() {
                         <button className="icon-btn" onClick={() => setEntryModal(e)}>
                           Edit
                         </button>
-                        <button className="icon-btn btn-danger" onClick={() => removeIncomeEntry(e.id)} aria-label="Delete">
+                        <button className="icon-btn btn-danger" onClick={() => handleDeleteEntry(e)} aria-label="Delete">
                           <Trash2 size={15} />
                         </button>
                       </div>

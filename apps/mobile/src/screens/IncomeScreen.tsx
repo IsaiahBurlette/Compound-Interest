@@ -1,7 +1,7 @@
 import { todayISO, type IncomeEntry, type IncomeFrequency, type IncomeSource } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
@@ -21,7 +21,7 @@ const FREQUENCIES: { value: IncomeFrequency; label: string }[] = [
 
 export function IncomeScreen() {
   const { colors, shared } = useTheme();
-  const { incomeSources, incomeEntries, settings, saveIncomeSource, saveIncomeEntry, removeIncomeEntry } = useData();
+  const { incomeSources, incomeEntries, settings, saveIncomeSource, removeIncomeSource, saveIncomeEntry, removeIncomeEntry } = useData();
   const currency = settings?.currency ?? "USD";
   const [sourceModal, setSourceModal] = useState<IncomeSource | null | "new">(null);
   const [entryModal, setEntryModal] = useState<IncomeEntry | null | "new">(null);
@@ -29,6 +29,27 @@ export function IncomeScreen() {
   const activeSources = incomeSources.filter((s) => !s.archived);
   const sourceById = useMemo(() => new Map(incomeSources.map((s) => [s.id, s])), [incomeSources]);
   const sortedEntries = [...incomeEntries].sort((a, b) => b.date.localeCompare(a.date));
+
+  const handleDeleteSource = (source: IncomeSource) => {
+    const entryCount = incomeEntries.filter((e) => e.sourceId === source.id).length;
+    Alert.alert(
+      `Delete "${source.name}"?`,
+      entryCount > 0
+        ? `It has ${entryCount} logged income ${entryCount === 1 ? "entry" : "entries"} — those will stay in your log but show as an unknown source.`
+        : "This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => removeIncomeSource(source.id) },
+      ]
+    );
+  };
+
+  const handleDeleteEntry = (entry: IncomeEntry) => {
+    Alert.alert("Delete this income entry?", "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => removeIncomeEntry(entry.id) },
+    ]);
+  };
 
   return (
     <Screen>
@@ -59,9 +80,17 @@ export function IncomeScreen() {
                     {s.expectedAmount ? ` · ~${formatMoney(s.expectedAmount, currency)}` : ""}
                   </Text>
                 </View>
-                <Pressable onPress={() => setSourceModal(s)}>
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: colors.accent }}>Edit</Text>
-                </Pressable>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+                  <Pressable onPress={() => setSourceModal(s)}>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: colors.accent }}>Edit</Text>
+                  </Pressable>
+                  <Pressable onPress={() => saveIncomeSource({ ...s, archived: !s.archived })} hitSlop={8}>
+                    <Ionicons name={s.archived ? "arrow-undo-outline" : "archive-outline"} size={17} color={colors.textSecondary} />
+                  </Pressable>
+                  <Pressable onPress={() => handleDeleteSource(s)} hitSlop={8}>
+                    <Ionicons name="trash-outline" size={17} color={colors.statusCritical} />
+                  </Pressable>
+                </View>
               </View>
             ))
           )}
@@ -89,7 +118,7 @@ export function IncomeScreen() {
                   <Pressable onPress={() => setEntryModal(e)} hitSlop={8}>
                     <Ionicons name="create-outline" size={17} color={colors.textSecondary} />
                   </Pressable>
-                  <Pressable onPress={() => removeIncomeEntry(e.id)} hitSlop={8}>
+                  <Pressable onPress={() => handleDeleteEntry(e)} hitSlop={8}>
                     <Ionicons name="trash-outline" size={17} color={colors.statusCritical} />
                   </Pressable>
                 </View>

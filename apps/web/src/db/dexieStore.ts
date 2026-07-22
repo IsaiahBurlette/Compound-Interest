@@ -90,6 +90,9 @@ export class DexieDataStore implements DataStore {
   async upsertIncomeSource(source: IncomeSource): Promise<void> {
     await this.db.incomeSources.put(source);
   }
+  async deleteIncomeSource(id: string): Promise<void> {
+    await this.db.incomeSources.delete(id);
+  }
 
   listIncomeEntries(): Promise<IncomeEntry[]> {
     return this.db.incomeEntries.toArray();
