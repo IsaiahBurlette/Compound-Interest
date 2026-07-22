@@ -1,6 +1,5 @@
 import { Text, View } from "react-native";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 
 export function StatTile({
   label,
@@ -13,6 +12,7 @@ export function StatTile({
   delta?: string;
   tone?: "neutral" | "good" | "critical";
 }) {
+  const { colors, shared } = useTheme();
   return (
     <View style={shared.statTile}>
       <Text style={shared.statLabel}>{label}</Text>

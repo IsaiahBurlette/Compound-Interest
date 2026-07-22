@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { colors, radius, spacing } from "./theme";
+import { radius, spacing, type ThemeColors } from "./theme";
 
-export const shared = StyleSheet.create({
+export function createSharedStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.surfacePage,
@@ -200,9 +201,12 @@ export const shared = StyleSheet.create({
     height: "100%",
     borderRadius: 999,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-});
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+  });
+}
+
+export type SharedStyles = ReturnType<typeof createSharedStyles>;

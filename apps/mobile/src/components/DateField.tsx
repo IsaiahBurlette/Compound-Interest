@@ -1,11 +1,11 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { formatDateLong } from "../utils/format";
 
 export function DateField({ label, value, onChange }: { label: string; value: string; onChange: (iso: string) => void }) {
+  const { colors, shared } = useTheme();
   const [open, setOpen] = useState(false);
   const dateObj = new Date(`${value}T00:00:00Z`);
 

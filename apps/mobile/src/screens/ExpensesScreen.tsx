@@ -17,14 +17,14 @@ import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
 import { Segmented } from "../components/Segmented";
 import { useData } from "../db/DataContext";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { categoryIconName } from "../utils/categoryIcons";
 import { formatDateLong, formatMoney } from "../utils/format";
 
 type Scope = "all" | "week" | "month" | "year";
 
 export function ExpensesScreen() {
+  const { colors, shared } = useTheme();
   const { categories, transactions, settings, saveTransaction, removeTransaction } = useData();
   const currency = settings?.currency ?? "USD";
   const weekStartsOn = settings?.weekStartsOn ?? 1;

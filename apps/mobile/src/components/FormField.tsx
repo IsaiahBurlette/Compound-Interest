@@ -1,8 +1,7 @@
 import { Picker } from "@react-native-picker/picker";
 import type { ReactNode } from "react";
 import { Text, TextInput, View, type KeyboardTypeOptions } from "react-native";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 
 export function TextField({
   label,
@@ -19,6 +18,7 @@ export function TextField({
   keyboardType?: KeyboardTypeOptions;
   multiline?: boolean;
 }) {
+  const { colors, shared } = useTheme();
   return (
     <View style={shared.field}>
       <Text style={shared.fieldLabel}>{label}</Text>
@@ -46,6 +46,7 @@ export function SelectField<T extends string>({
   onChange: (value: T) => void;
   options: { value: T; label: string }[];
 }) {
+  const { colors, shared } = useTheme();
   return (
     <View style={shared.field}>
       <Text style={shared.fieldLabel}>{label}</Text>

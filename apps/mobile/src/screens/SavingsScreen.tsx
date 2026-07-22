@@ -7,8 +7,7 @@ import { Button } from "../components/Button";
 import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
 import { useData } from "../db/DataContext";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { formatMoney } from "../utils/format";
 
 const METHOD_LABEL: Record<AllocationMethod, string> = {
@@ -18,6 +17,7 @@ const METHOD_LABEL: Record<AllocationMethod, string> = {
 };
 
 export function SavingsScreen() {
+  const { colors, shared } = useTheme();
   const { allocationStrategies, settings, saveAllocationStrategy, saveSettings } = useData();
   const [strategyModal, setStrategyModal] = useState<AllocationStrategy | null | "new">(null);
   const [calcStrategyId, setCalcStrategyId] = useState(settings?.defaultAllocationStrategyId ?? allocationStrategies[0]?.id ?? "");
@@ -41,11 +41,8 @@ export function SavingsScreen() {
   };
 
   return (
-    <Screen>
-      <View style={shared.header}>
-        <Text style={shared.title}>Savings & Investing</Text>
-        <Text style={shared.subtitle}>Fill your emergency fund first, then invest.</Text>
-      </View>
+    <Screen hasHeader>
+      <Text style={[shared.subtitle, { marginTop: 0 }]}>Fill your emergency fund first, then invest.</Text>
 
       <View style={shared.card}>
         <Text style={shared.cardTitle}>Recommendation calculator</Text>
@@ -160,6 +157,7 @@ function Bar({ value, total, color }: { value: number; total: number; color: str
   return <View style={{ width: `${(value / total) * 100}%`, backgroundColor: color }} />;
 }
 function SplitRow({ color, label, amount, currency }: { color: string; label: string; amount: number; currency: string }) {
+  const { colors, shared } = useTheme();
   return (
     <View style={shared.row}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -183,6 +181,7 @@ function StrategyModal({
       Pick<AllocationStrategy, "name" | "method" | "needsPct" | "wantsPct" | "savingsPct" | "investingShareOfSavingsPct" | "emergencyFundMonths">
   ) => void;
 }) {
+  const { colors } = useTheme();
   const [name, setName] = useState(strategy?.name ?? "");
   const [method, setMethod] = useState<AllocationMethod>(strategy?.method ?? "custom");
   const [needsPct, setNeedsPct] = useState((strategy?.needsPct ?? 50).toString());

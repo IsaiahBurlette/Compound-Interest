@@ -1,13 +1,13 @@
 import type { PeriodPoint } from "@compound-interest/core";
 import { ScrollView, Text, View } from "react-native";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { formatMoney } from "../utils/format";
 
 const CHART_HEIGHT = 160;
 const BAR_WIDTH = 10;
 
 export function TrendBars({ points, currency }: { points: PeriodPoint[]; currency: string }) {
+  const { colors, shared } = useTheme();
   if (points.length === 0) {
     return (
       <View style={shared.emptyState}>

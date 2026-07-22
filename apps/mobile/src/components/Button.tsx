@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Pressable, Text } from "react-native";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 
 type Variant = "default" | "primary" | "danger";
 
@@ -17,6 +17,7 @@ export function Button({
   disabled?: boolean;
   icon?: ReactNode;
 }) {
+  const { shared } = useTheme();
   const variantStyle = variant === "primary" ? shared.btnPrimary : variant === "danger" ? shared.btnDanger : null;
   const textStyle = variant === "primary" ? shared.btnPrimaryText : variant === "danger" ? shared.btnDangerText : null;
   return (

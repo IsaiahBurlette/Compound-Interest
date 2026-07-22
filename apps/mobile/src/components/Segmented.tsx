@@ -1,5 +1,5 @@
 import { Pressable, Text, View } from "react-native";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 
 export function Segmented<T extends string>({
   value,
@@ -10,6 +10,7 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
   options: { value: T; label: string }[];
 }) {
+  const { shared } = useTheme();
   return (
     <View style={shared.segmented}>
       {options.map((o) => {

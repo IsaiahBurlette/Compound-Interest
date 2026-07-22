@@ -22,8 +22,7 @@ import { Segmented } from "../components/Segmented";
 import { StatTile } from "../components/StatTile";
 import { TrendBars } from "../components/TrendBars";
 import { useData } from "../db/DataContext";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { formatDateLong, formatMoney, formatPct } from "../utils/format";
 
 const WINDOW: Record<Granularity, number> = { week: 12, month: 12, year: 5 };
@@ -53,6 +52,7 @@ function shiftWindow(anchor: string, granularity: Granularity, direction: 1 | -1
 }
 
 export function ReportsScreen() {
+  const { colors, shared } = useTheme();
   const { incomeEntries, transactions, categories, settings } = useData();
   const [granularity, setGranularity] = useState<Granularity>("month");
   const [anchor, setAnchor] = useState(todayISO());
@@ -72,13 +72,10 @@ export function ReportsScreen() {
   const rate = savingsRate(totalIncome, Math.max(0, netTotal));
 
   return (
-    <Screen>
-      <View style={shared.header}>
-        <Text style={shared.title}>Reports</Text>
-        <Text style={shared.subtitle}>
-          {formatDateLong(range.start)} – {formatDateLong(range.end)}
-        </Text>
-      </View>
+    <Screen hasHeader>
+      <Text style={[shared.subtitle, { marginTop: 0 }]}>
+        {formatDateLong(range.start)} – {formatDateLong(range.end)}
+      </Text>
 
       <Segmented
         value={granularity}

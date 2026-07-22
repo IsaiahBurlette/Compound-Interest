@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { Modal as RNModal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { colors, radius, spacing } from "../theme";
+import { useTheme } from "../ThemeContext";
+import { radius, spacing } from "../theme";
 
 export function Modal({
   visible,
@@ -16,13 +17,14 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const { colors } = useTheme();
   return (
     <RNModal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { backgroundColor: colors.surface1 }]}>
           <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
             <Pressable onPress={onClose} hitSlop={10}>
               <Ionicons name="close" size={20} color={colors.textSecondary} />
             </Pressable>
@@ -44,7 +46,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.surface1,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     maxHeight: "88%",
@@ -61,7 +62,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: colors.textPrimary,
   },
   body: {
     gap: spacing.md,

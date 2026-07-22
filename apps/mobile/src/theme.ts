@@ -1,9 +1,10 @@
 /**
- * Light-theme palette mirroring the web app's CSS custom properties (see
- * apps/web/src/index.css). Dark mode isn't wired up yet on mobile — worth
- * adding later via useColorScheme(), same values as the web dark block.
+ * Light/dark palettes mirroring the web app's CSS custom properties
+ * (see apps/web/src/index.css). Consumed via useTheme() in ThemeContext.tsx
+ * — never import lightColors/darkColors directly in a component, since that
+ * bypasses the live system-theme switch.
  */
-export const colors = {
+export const lightColors = {
   surfacePage: "#f9f9f7",
   surface1: "#fcfcfb",
   surface2: "#ffffff",
@@ -34,15 +35,49 @@ export const colors = {
   accentInk: "#ffffff",
 };
 
+export const darkColors: ThemeColors = {
+  surfacePage: "#0d0d0d",
+  surface1: "#1a1a19",
+  surface2: "#202020",
+  surfaceSunken: "#161615",
+  textPrimary: "#ffffff",
+  textSecondary: "#c3c2b7",
+  textMuted: "#898781",
+  gridline: "#2c2c2a",
+  border: "#3a3a37",
+  borderStrong: "#383835",
+
+  series1: "#3987e5",
+  series2: "#d95926",
+  series3: "#199e70",
+  series4: "#c98500",
+  series5: "#d55181",
+  series6: "#008300",
+  series7: "#9085e9",
+  series8: "#e66767",
+
+  statusGood: "#0ca30c",
+  statusWarning: "#fab219",
+  statusSerious: "#ec835a",
+  statusCritical: "#e66767",
+  successText: "#0ca30c",
+
+  accent: "#3987e5",
+  accentInk: "#ffffff",
+};
+
+export type ThemeColors = typeof lightColors;
+
+/** Category color picker swatches — deliberately fixed to the light steps in both modes, since a category's stored hex shouldn't shift based on the viewer's current theme. */
 export const paletteSlots = [
-  colors.series1,
-  colors.series2,
-  colors.series3,
-  colors.series4,
-  colors.series5,
-  colors.series6,
-  colors.series7,
-  colors.series8,
+  lightColors.series1,
+  lightColors.series2,
+  lightColors.series3,
+  lightColors.series4,
+  lightColors.series5,
+  lightColors.series6,
+  lightColors.series7,
+  lightColors.series8,
 ];
 
 export const radius = { sm: 6, md: 10, lg: 16 };

@@ -17,14 +17,14 @@ import { Screen } from "../components/Screen";
 import { Segmented } from "../components/Segmented";
 import { StatTile } from "../components/StatTile";
 import { useData } from "../db/DataContext";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { categoryIconName } from "../utils/categoryIcons";
 import { formatDateLong, formatMoney, formatPct } from "../utils/format";
 
 type Scope = "week" | "month" | "year";
 
 export function DashboardScreen() {
+  const { colors, shared } = useTheme();
   const { incomeEntries, transactions, categories, settings } = useData();
   const [scope, setScope] = useState<Scope>("month");
   const currency = settings?.currency ?? "USD";

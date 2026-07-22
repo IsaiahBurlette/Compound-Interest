@@ -24,8 +24,8 @@ import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
 import { Segmented } from "../components/Segmented";
 import { useData } from "../db/DataContext";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
+import type { ThemeColors } from "../theme";
 import { formatDateLong, formatMoney, formatPct } from "../utils/format";
 
 type Status = "current" | "upcoming" | "past";
@@ -37,6 +37,7 @@ function statusOf(budget: BudgetPeriod, today: string): Status {
 }
 
 export function BudgetsScreen() {
+  const { colors, shared } = useTheme();
   const { budgetPeriods, incomeEntries, transactions, categories, settings, saveBudgetPeriod, removeBudgetPeriod } = useData();
   const [typeFilter, setTypeFilter] = useState<PeriodType>(settings?.defaultPeriodType ?? "monthly");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -96,7 +97,7 @@ export function BudgetsScreen() {
               <Pressable onPress={() => toggle(budget.id)} style={shared.row}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1 }}>
                   <View style={[shared.pill, statusPillStyle(status)]}>
-                    <Text style={[shared.pillText, statusTextStyle(status)]}>{status === "current" ? "Current" : status === "upcoming" ? "Upcoming" : "Past"}</Text>
+                    <Text style={[shared.pillText, statusTextStyle(status, colors)]}>{status === "current" ? "Current" : status === "upcoming" ? "Upcoming" : "Past"}</Text>
                   </View>
                   <View style={{ flexShrink: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: colors.textPrimary }}>
@@ -177,7 +178,7 @@ function statusPillStyle(status: Status) {
   if (status === "current") return { backgroundColor: "#0ca30c26" };
   return {};
 }
-function statusTextStyle(status: Status) {
+function statusTextStyle(status: Status, colors: ThemeColors) {
   if (status === "current") return { color: colors.successText };
   return {};
 }
@@ -193,6 +194,7 @@ function BudgetFormModal({
   onClose: () => void;
   onSave: (input: Partial<BudgetPeriod> & Pick<BudgetPeriod, "type" | "startDate" | "endDate" | "plannedIncome" | "lines">) => void;
 }) {
+  const { colors, shared } = useTheme();
   const { categories, allocationStrategies, settings } = useData();
   const [type, setType] = useState<PeriodType>(budget?.type ?? defaultType);
   const [anchorDate, setAnchorDate] = useState(budget?.startDate ?? todayISO());
@@ -281,6 +283,7 @@ function BudgetFormModal({
 }
 
 function PlanAheadModal({ onClose }: { onClose: () => void }) {
+  const { colors } = useTheme();
   const { budgetPeriods, categories, allocationStrategies, settings, saveBudgetPeriod } = useData();
   const [type, setType] = useState<PeriodType>(settings?.defaultPeriodType ?? "monthly");
   const [count, setCount] = useState("3");

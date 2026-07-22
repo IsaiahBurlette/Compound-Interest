@@ -8,8 +8,7 @@ import { DateField } from "../components/DateField";
 import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
 import { useData } from "../db/DataContext";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { formatDateLong, formatMoney } from "../utils/format";
 
 const FREQUENCIES: { value: IncomeFrequency; label: string }[] = [
@@ -21,6 +20,7 @@ const FREQUENCIES: { value: IncomeFrequency; label: string }[] = [
 ];
 
 export function IncomeScreen() {
+  const { colors, shared } = useTheme();
   const { incomeSources, incomeEntries, settings, saveIncomeSource, saveIncomeEntry, removeIncomeEntry } = useData();
   const currency = settings?.currency ?? "USD";
   const [sourceModal, setSourceModal] = useState<IncomeSource | null | "new">(null);

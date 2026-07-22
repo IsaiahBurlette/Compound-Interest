@@ -10,8 +10,8 @@ import { Button } from "../components/Button";
 import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
 import { useData } from "../db/DataContext";
-import { colors, paletteSlots } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
+import { paletteSlots } from "../theme";
 import { categoryIconName } from "../utils/categoryIcons";
 
 const CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
@@ -23,6 +23,7 @@ const KIND_LABEL: Record<CategoryKind, string> = {
 };
 
 export function SettingsScreen() {
+  const { colors, shared } = useTheme();
   const { settings, allocationStrategies, categories, saveSettings, saveCategory, archiveCategory, exportData, importData, resetAllData } = useData();
   const [categoryModal, setCategoryModal] = useState<Category | null | "new">(null);
 
@@ -58,11 +59,8 @@ export function SettingsScreen() {
   };
 
   return (
-    <Screen>
-      <View style={shared.header}>
-        <Text style={shared.title}>Settings</Text>
-        <Text style={shared.subtitle}>Preferences, categories, and your data.</Text>
-      </View>
+    <Screen hasHeader>
+      <Text style={[shared.subtitle, { marginTop: 0 }]}>Preferences, categories, and your data.</Text>
 
       <View style={shared.card}>
         <Text style={shared.cardTitle}>Preferences</Text>
@@ -158,6 +156,7 @@ function CategoryModal({
   onClose: () => void;
   onSave: (input: Partial<Category> & { name: string; kind: CategoryKind; color: string }) => void;
 }) {
+  const { colors, shared } = useTheme();
   const [name, setName] = useState(category?.name ?? "");
   const [kind, setKind] = useState<CategoryKind>(category?.kind ?? "essential");
   const [color, setColor] = useState(category?.color ?? paletteSlots[0]);

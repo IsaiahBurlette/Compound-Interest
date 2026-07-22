@@ -1,8 +1,7 @@
 import type { CategoryTotal } from "@compound-interest/core";
 import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, G } from "react-native-svg";
-import { colors } from "../theme";
-import { shared } from "../theme.styles";
+import { useTheme } from "../ThemeContext";
 import { formatMoney, formatPct } from "../utils/format";
 
 const SIZE = 180;
@@ -11,6 +10,7 @@ const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export function Donut({ rows, currency }: { rows: CategoryTotal[]; currency: string }) {
+  const { colors, shared } = useTheme();
   if (rows.length === 0) {
     return (
       <View style={shared.emptyState}>
@@ -51,8 +51,8 @@ export function Donut({ rows, currency }: { rows: CategoryTotal[]; currency: str
           </G>
         </Svg>
         <View style={styles.center} pointerEvents="none">
-          <Text style={styles.centerLabel}>TOTAL</Text>
-          <Text style={styles.centerValue}>{formatMoney(total, currency)}</Text>
+          <Text style={[styles.centerLabel, { color: colors.textMuted }]}>TOTAL</Text>
+          <Text style={[styles.centerValue, { color: colors.textPrimary }]}>{formatMoney(total, currency)}</Text>
         </View>
       </View>
 
@@ -89,13 +89,11 @@ const styles = StyleSheet.create({
   centerLabel: {
     fontSize: 10,
     fontWeight: "700",
-    color: colors.textMuted,
     letterSpacing: 0.4,
   },
   centerValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: colors.textPrimary,
     marginTop: 2,
   },
 });
