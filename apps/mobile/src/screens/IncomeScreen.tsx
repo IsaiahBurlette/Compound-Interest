@@ -1,7 +1,8 @@
 import { todayISO, type IncomeEntry, type IncomeFrequency, type IncomeSource } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { SelectField, TextField } from "../components/FormField";
@@ -30,7 +31,7 @@ export function IncomeScreen() {
   const sortedEntries = [...incomeEntries].sort((a, b) => b.date.localeCompare(a.date));
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Income</Text>
         <Text style={shared.subtitle}>Log actual income as it comes in — amounts can vary every time.</Text>
@@ -120,7 +121,7 @@ export function IncomeScreen() {
           }}
         />
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 

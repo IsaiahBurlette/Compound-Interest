@@ -1,7 +1,8 @@
 import { recommendAllocation, type AllocationMethod, type AllocationStrategy } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
@@ -40,7 +41,7 @@ export function SavingsScreen() {
   };
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Savings & Investing</Text>
         <Text style={shared.subtitle}>Fill your emergency fund first, then invest.</Text>
@@ -148,7 +149,7 @@ export function SavingsScreen() {
           }}
         />
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 

@@ -11,8 +11,9 @@ import {
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { Donut } from "../components/Donut";
+import { Screen } from "../components/Screen";
 import { Segmented } from "../components/Segmented";
 import { StatTile } from "../components/StatTile";
 import { useData } from "../db/DataContext";
@@ -53,7 +54,7 @@ export function DashboardScreen() {
     .slice(0, 6);
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Dashboard</Text>
         <Text style={shared.subtitle}>
@@ -112,6 +113,6 @@ export function DashboardScreen() {
           })
         )}
       </View>
-    </ScrollView>
+    </Screen>
   );
 }

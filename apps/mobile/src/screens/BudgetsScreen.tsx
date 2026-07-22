@@ -16,7 +16,8 @@ import {
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { SelectField, TextField } from "../components/FormField";
@@ -54,7 +55,7 @@ export function BudgetsScreen() {
     });
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Budgets</Text>
         <Text style={shared.subtitle}>Plan by month or by week — set budgets months ahead of time.</Text>
@@ -168,7 +169,7 @@ export function BudgetsScreen() {
       )}
 
       {planAheadOpen && <PlanAheadModal onClose={() => setPlanAheadOpen(false)} />}
-    </ScrollView>
+    </Screen>
   );
 }
 

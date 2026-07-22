@@ -15,7 +15,8 @@ import {
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Screen } from "../components/Screen";
 import { Donut } from "../components/Donut";
 import { Segmented } from "../components/Segmented";
 import { StatTile } from "../components/StatTile";
@@ -71,7 +72,7 @@ export function ReportsScreen() {
   const rate = savingsRate(totalIncome, Math.max(0, netTotal));
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Reports</Text>
         <Text style={shared.subtitle}>
@@ -123,6 +124,6 @@ export function ReportsScreen() {
         <Text style={[shared.cardSubtitle, { marginBottom: 14 }]}>Across the window above</Text>
         <Donut rows={categoryRows} currency={currency} />
       </View>
-    </ScrollView>
+    </Screen>
   );
 }

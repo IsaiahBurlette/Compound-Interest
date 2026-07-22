@@ -9,7 +9,8 @@ import {
 } from "@compound-interest/core";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { DateField } from "../components/DateField";
 import { SelectField, TextField } from "../components/FormField";
@@ -45,7 +46,7 @@ export function ExpensesScreen() {
   const total = sorted.reduce((s, t) => s + t.amount, 0);
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Expenses</Text>
         <Text style={shared.subtitle}>Track every dollar spent, categorized as you go.</Text>
@@ -114,7 +115,7 @@ export function ExpensesScreen() {
           }}
         />
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 

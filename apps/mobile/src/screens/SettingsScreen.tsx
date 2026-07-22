@@ -4,7 +4,8 @@ import * as DocumentPicker from "expo-document-picker";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
+import { Screen } from "../components/Screen";
 import { Button } from "../components/Button";
 import { SelectField, TextField } from "../components/FormField";
 import { Modal } from "../components/Modal";
@@ -57,7 +58,7 @@ export function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={shared.screen} contentContainerStyle={shared.content}>
+    <Screen>
       <View style={shared.header}>
         <Text style={shared.title}>Settings</Text>
         <Text style={shared.subtitle}>Preferences, categories, and your data.</Text>
@@ -144,7 +145,7 @@ export function SettingsScreen() {
           }}
         />
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 
